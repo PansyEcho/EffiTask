@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.shi.effitask.dao.TaskDao">
+
+    <resultMap id="getTaskList" type="com.shi.effitask.pojo.entity.TaskEntity">
+        <result column="id" jdbcType="BIGINT" property="id" />
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
+        <result column="task_type" jdbcType="VARCHAR" property="taskType"/>
+        <result column="task_stage" jdbcType="VARCHAR" property="taskStage"/>
+        <result column="status" jdbcType="INTEGER" property="status"/>
+        <result column="crt_retry_num" jdbcType="INTEGER" property="currentRetryNum"/>
+        <result column="max_retry_num" jdbcType="INTEGER" property="maxRetryNum"/>
+        <result column="priority" jdbcType="INTEGER" property="priority"/>
+        <result column="order_time" jdbcType="BIGINT" property="orderTime"/>
+        <result column="max_retry_interval" jdbcType="INTEGER" property="maxRetryInterval"/>
+        <result column="schedule_log" jdbcType="VARCHAR" property="scheduleLog"/>
+        <result column="task_context" jdbcType="VARCHAR" property="taskContext"/>
+        <result column="create_time" jdbcType="BIGINT" property="createTime"/>
+        <result column="modify_time" jdbcType="BIGINT" property="modifyTime"/>
+    </resultMap>
+    <update id="increaseCrtRetryNum">
+        update
+            ${tableName}
+        set
+            crt_retry_num = crt_retry_num + 1
+        where
+            task_id = #{task_id}
+    </update>
+    <update id="updateTask"
+            parameterType="com.shi.effitask.pojo.entity.TaskEntity">
+        update
+            ${tableName}
+        set
+            user_id = #{task.userId},
+            task_stage = #{task.taskStage},
+            `status` = #{task.status},
+            crt_retry_num = #{task.currentRetryNum},
+            max_retry_num = #{task.maxRetryNum},
+            max_retry_interval = #{task.maxRetryInterval},
+            schedule_log = #{task.scheduleLog},
+            task_context = #{task.taskContext},
+            order_time = #{task.orderTime}
+        where
+            task_id = #{task.taskId}
+        and
+            `status` not in
+                <foreach collection="status" item="s" index="index"
+                         open="(" close=")" separator=",">
+                    #{s}
+                </foreach>
+    </update>
+
+
+    <update id="setStatus">
+        update
+            ${tableName}
+        set
+            status = #{status}
+        where
+            task_id = #{taskId}
+    </update>
+
+
+    <update id="updateTask_contextByTask_id">
+        update
+            ${tableName}
+        set
+            task_context = #{context}
+        where
+            task_id = #{taskId}
+    </update>
+    <update id="modifyTimeoutPending">
+        update
+            ${tableName}
+        set
+            status = #{newStatus}
+        where
+            status = #{oldStatus}
+          and
+            modify_time + #{maxProcessingTime} &lt; #{currentTime};
+    </update>
+    <update id="updateStatusBatch">
+        update ${tableName} set status = #{status}, modify_time = #{modifyTime}
+        where id in
+        <foreach collection="ids" item="s" index="index"
+                 open="(" close=")" separator=",">
+            #{s}
+        </foreach>
+    </update>
+
+    <select id="getTaskList"
+            resultMap="getTaskList">
+        SELECT  *
+        FROM ${tableName}
+        where
+            task_type = #{taskType} and status = #{status}
+        order by order_time
+        limit #{limit}
+    </select>
+    <select id="getAliveTaskList" resultType="com.shi.effitask.pojo.entity.TaskEntity">
+        select * from ${tableName}
+        where
+        status in
+        <foreach collection="statusList" item="status" index="index"
+                 open="(" close=")" separator=",">
+            #{status}
+        </foreach>
+    </select>
+    <select id="getTaskCountByStatus" resultType="java.lang.Integer"
+            parameterType="java.lang.Integer">
+        select count(*) from ${tableName}
+        where
+            status = #{status}
+    </select>
+    <select id="getLongTimeProcessing" resultType="com.shi.effitask.pojo.entity.TaskEntity">
+        select * from ${tableName}
+        where
+            status = #{status}
+          and
+            modify_time &lt; #{currentTime} - #{maxProcessTime}
+    </select>
+    <select id="find" resultMap="getTaskList">
+        select * from ${tableName}
+        where
+            task_id = #{taskId}
+    </select>
+    <select id="getTaskCount" resultType="java.lang.Integer">
+        select count(*) from ${tableName}
+        where
+        status in
+        <foreach collection="statusList" item="status" index="index"
+                 open="(" close=")" separator=",">
+            #{status}
+        </foreach>
+    </select>
+    <select id="getTaskByUser_idAndStatus" resultType="com.shi.effitask.pojo.entity.TaskEntity">
+        select * from ${tableName}
+        where
+        user_id = #{userId}
+        and
+        status in
+        <foreach collection="statusList" item="status" index="index"
+                 open="(" close=")" separator=",">
+            #{status}
+        </foreach>
+    </select>
+
+
+    <insert id="create"
+            useGeneratedKeys="true" keyProperty="asyncFlowTask.id">
+        INSERT INTO ${tableName} (`user_id`,
+                                  `task_id`,
+                                  `task_type`,
+                                  `task_stage`,
+                                  `status`,
+                                  `crt_retry_num`,
+                                  `max_retry_num`,
+                                  `order_time`,
+                                  `priority`,
+                                  `max_retry_interval`,
+                                  `schedule_log`,
+                                  `task_context`)
+        VALUES (#{task.userId},
+                #{task.taskId},
+                #{task.task_type},
+                #{task.taskStage},
+                #{task.status},
+                #{task.currentRetryNum},
+                #{task.maxRetryNum},
+                #{task.orderTime},
+                #{task.priority},
+                #{task.maxRetryInterval},
+                #{task.scheduleLog},
+                #{task.taskContext})
+    </insert>
+
+
+</mapper>

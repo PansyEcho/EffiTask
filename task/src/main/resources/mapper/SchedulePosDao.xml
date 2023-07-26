@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shi.effitask.dao.SchedulePosDao">
+
+    <resultMap id="BaseResultMap" type="com.shi.effitask.pojo.entity.SchedulePosEntity">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="taskType" column="task_type" jdbcType="VARCHAR"/>
+        <result property="scheduleBeginPos" column="schedule_begin_pos" jdbcType="INTEGER"/>
+        <result property="scheduleEndPos" column="schedule_end_pos" jdbcType="INTEGER"/>
+        <result property="createTime" column="create_time" jdbcType="BIGINT"/>
+        <result property="modifyTime" column="modify_time" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <insert id="save"
+            parameterType="com.shi.effitask.pojo.entity.TaskEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into schedule_pos (`task_type`,
+                                    `data_begin_pos`,
+                                    `data_end_pos`,
+                                    `schedule_begin_pos`,
+                                    `schedule_end_pos`)
+        VALUES (#{taskType}, #{dataBeginPos}, #{dataEndPos}, #{scheduleBeginPos},
+                #{scheduleEndPos})
+    </insert>
+    <update id="update"
+            parameterType="com.shi.effitask.pojo.entity.TaskEntity">
+        UPDATE schedule_pos
+        <set>
+            <if test="taskType != null">
+                task_type = #{taskType},
+            </if>
+            <if test="scheduleBeginPos != null">
+                schedule_begin_pos = #{scheduleBeginPos},
+            </if>
+            <if test="scheduleEndPos != null">
+                schedule_end_pos = #{scheduleEndPos},
+            </if>
+        </set>
+        WHERE id = #{id}
+
+    </update>
+
+
+    <select id="getTaskPos" resultType="com.shi.effitask.pojo.entity.SchedulePosEntity">
+        select * from schedule_pos
+        where
+            task_type = #{taskType}
+    </select>
+
+
+</mapper>
