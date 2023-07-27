@@ -1,8 +1,8 @@
 package com.shi.effitask.enums;
 
 public enum ResponseStatus {
-    SUCCESS(0, "ok"),
-    ERR_INPUT_INVALID(8020, "input invalid"),
+    SUCCESS(0, "succeed"),
+    ERR_INPUT_INVALID(8020, "参数错误"),
     ERR_SHOULD_BIND(8021, "should bind failed"),
     ERR_JSON_MARSHAL(8022, "json marshal failed"),
     ERR_GET_TASK_INFO(8035, "get task info failed"),
@@ -15,8 +15,11 @@ public enum ResponseStatus {
     ERR_GET_TASK_POS(8042, "get task pos failed"),
     ERR_GET_PROCESSING_COUNT(8043, "get processing count failed"),
     ERR_SET_USER_PRIORITY(8045, "set user priority failed"),
-    ERR_GET_SCHEDULE_CONFIG(8046, "get schedule config failed"),
-    ERR_SET_SCHEDULE_CONFIG(8047, "set schedule config failed");
+    ERR_GET_SCHEDULE_CONFIG(8046, "获取调度配置失败"),
+    ERR_SET_SCHEDULE_CONFIG(8047, "保存调度配置失败"),
+
+
+    WARN_NO_TASK(8048, "无待执行任务");
 
     private int code;
     private String msg;
