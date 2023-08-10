@@ -19,7 +19,9 @@ public enum ResponseStatus {
     ERR_SET_SCHEDULE_CONFIG(8047, "保存调度配置失败"),
 
 
-    WARN_NO_TASK(8048, "无待执行任务");
+    WARN_NO_TASK(8048, "无待执行任务"),
+    ERR_TRANSFORM_CONTEXT(8049, "调度上下文转换失败"),
+    ERR_TRANSFORM_LOG(8050, "调度日志转换失败");
 
     private int code;
     private String msg;

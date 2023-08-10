@@ -31,7 +31,7 @@ public interface ITaskService {
      * @param updateTaskReq 更新数据
      * @return 更新结果
      */
-    <T> Result<T> setTask(UpdateTaskReq updateTaskReq);
+    <T> Result<T> updateTask(UpdateTaskReq updateTaskReq);
 
     /**
      * @param task_id 任务ID

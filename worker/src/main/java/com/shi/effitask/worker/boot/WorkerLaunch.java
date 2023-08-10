@@ -1,5 +1,6 @@
 package com.shi.effitask.worker.boot;
 
+import com.alibaba.fastjson2.JSON;
 import com.shi.effitask.constant.TaskConstant;
 import com.shi.effitask.enums.ResponseStatus;
 import com.shi.effitask.enums.TaskStatus;
@@ -7,6 +8,7 @@ import com.shi.effitask.pojo.dto.TaskFilterDTO;
 import com.shi.effitask.pojo.dto.TaskResp;
 import com.shi.effitask.pojo.entity.ScheduleConfigEntity;
 import com.shi.effitask.utils.Utils;
+import com.shi.effitask.worker.constant.WorkerConstant;
 import com.shi.effitask.worker.core.TaskBuilder;
 import com.shi.effitask.worker.core.base.TaskBase;
 import com.shi.effitask.worker.core.base.TaskRet;
@@ -16,7 +18,7 @@ import com.shi.effitask.worker.enums.StageType;
 import com.shi.effitask.worker.rpc.HTTPTaskManager;
 import com.shi.effitask.worker.rpc.TaskManager;
 import com.shi.effitask.worker.core.observer.StageObserver;
-import com.shi.effitask.worker.user.custom.VideoTask;
+import com.shi.effitask.worker.user.custom.Video;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WorkerLaunch implements Launch{
+public class WorkerLaunch implements Launch {
 
 
     Logger LOGGER = LoggerFactory.getLogger(WorkerLaunch.class);
@@ -70,7 +72,7 @@ public class WorkerLaunch implements Launch{
         taskManager = new HTTPTaskManager();
 
         taskTypes = new ArrayList<Class>() {{
-            add(VideoTask.class);
+            add(Video.class);
         }};
         packageName = taskTypes.get(0).getPackage().getName();
         this.scheduleLimit = scheduleLimit;
@@ -79,6 +81,12 @@ public class WorkerLaunch implements Launch{
         observerManager.registerEvent(new StageObserver());
         offset = new AtomicInteger(0);
         // 初始化，拉取任务配置信息
+        LOGGER.info(WorkerConstant.SVC_NAME +
+                    " init params, taskTypes={}, packageName={}, observerManager={}",
+                    taskTypes.toString(),
+                    packageName,
+                    observerManager.toString()
+                );
         init();
     }
 
@@ -87,27 +95,36 @@ public class WorkerLaunch implements Launch{
     public void init() {
         loadConfig();
         if (scheduleLimit != 0) {
-            LOGGER.info("init ScheduleLimit : %d", scheduleLimit);
+            LOGGER.info((WorkerConstant.SVC_NAME + "init ScheduleLimit:{}"), scheduleLimit);
             concurrentRunTimes = scheduleLimit;
             MaxConcurrentRunTimes = scheduleLimit;
         } else {
-            this.scheduleLimit = this.scheduleConfigMap.get(taskTypes.get(0).getSimpleName()).getScheduleLimit();
+            scheduleLimit = scheduleConfigMap.get(taskTypes.get(0).getSimpleName()).getScheduleLimit();
         }
         // 定期更新任务配置信息
-
         loadPool.scheduleAtFixedRate(this::loadConfig, cycleScheduleConfigTime, cycleScheduleConfigTime, TimeUnit.MILLISECONDS);
     }
 
     //任务调度配置缓存到map中
     private void loadConfig() {
-        List<ScheduleConfigEntity> configList = taskManager.getConfigList();
+        LOGGER.info(WorkerConstant.SVC_NAME +
+                    " init, loading schedule config...");
+        //todo verify response
+        List<ScheduleConfigEntity> configList = taskManager.getConfigList().getData();
+        ScheduleConfigEntity scheduleConfigEntity = configList.get(0);
+        System.out.println(scheduleConfigEntity);
         for (ScheduleConfigEntity config : configList) {
             scheduleConfigMap.put(config.getTaskType(), config);
         }
+        LOGGER.info(WorkerConstant.SVC_NAME + " init," +
+                " loading schedule config successfully! configList = {}",
+                JSON.toJSONString(configList)
+        );
     }
 
     @Override
     public int start() {
+        LOGGER.info(WorkerConstant.SVC_NAME + " start...");
         offset.set(offset.get() == taskTypes.size() - 1 ? 0 : offset.incrementAndGet());
         Class taskType = taskTypes.get(offset.get());
         // 读取对应任务配置信息
@@ -127,14 +144,14 @@ public class WorkerLaunch implements Launch{
                 new LinkedBlockingQueue<>(TaskConstant.DEFAULT_QUEUE_SIZE)
         );
 
-        for(;;) {
+        for (; ; ) {
             //单次拉取任务数放得下阻塞队列,就不断拉取执行
             if (TaskConstant.DEFAULT_QUEUE_SIZE - threadPoolExecutor.getQueue().size() >= scheduleLimit) {
                 execute(taskType);
             }
             //任务队列满了,等待下一个周期
             try {
-                Thread.sleep(intervalTime + (int)(Math.random() * 500));
+                Thread.sleep(intervalTime + (int) (Math.random() * 500));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -188,13 +205,24 @@ public class WorkerLaunch implements Launch{
             e.printStackTrace();
         }
         TaskStageBase taskStageBase = null;
-        Class<?> aClass = null;
+        Class<?> clazz = null;
         try {
-            // 利用Java反射执行本地方法
-            aClass = getaClass(taskBase.getTaskType());
-            Method method = TaskBuilder.getMethod(aClass, taskBase.getTaskStage(), taskBase.getTaskContext().getParams(), taskBase.getTaskContext().getClazz());
-            LOGGER.info("开始执行:" + method.getName());
-            TaskRet returnVal = (TaskRet) method.invoke(aClass.newInstance(), taskBase.getTaskContext().getParams());
+            // 反射执行自定义任务
+            clazz = getclazz(taskBase.getTaskType());
+            Method method = TaskBuilder.getMethod(clazz,
+                    taskBase.getTaskStage(),
+                    taskBase.getTaskContext().getParams(),
+                    taskBase.getTaskContext().getClazz()
+            );
+            LOGGER.info("开始执行, task={}, stage={}, taskBase={},",
+                    clazz.getSimpleName(),
+                    method.getName(),
+                    taskBase
+            );
+            TaskRet returnVal = (TaskRet) method.invoke(
+                    clazz.newInstance(),
+                    taskBase.getTaskContext().getParams()
+            );
             if (returnVal != null) {
                 taskStageBase = returnVal.getTaskStageBase();
                 Object result = returnVal.getResult();
@@ -202,53 +230,68 @@ public class WorkerLaunch implements Launch{
             }
         } catch (Exception e) {
             try {
-                // 执行出现异常了（任务执行失败了）更改任务状态为PENDING，重试次数+1，超过重试次数设置为FAIL
-                observerManager.wakeUpObserver(StageType.onError, taskBase, scheduleConfigMap.get(taskBase.getTaskType()), TaskBaseList, aClass, e);
+                //
+                observerManager.wakeUpObserver(
+                        StageType.onError,
+                        taskBase,
+                        scheduleConfigMap.get(taskBase.getTaskType()),
+                        TaskBaseList,
+                        clazz,
+                        e
+                );
                 return;
-            } catch (InvocationTargetException | IllegalAccessException ex) {
-                ex.printStackTrace();
+            } catch (Exception exception) {
+                LOGGER.error("wake up on error failed ", exception);
             }
         }
         try {
-            // 正常执行成功了干点事，方便后续扩展
-            observerManager.wakeUpObserver(StageType.onFinish, taskBase, taskStageBase, aClass);
+            // 任务成功后,观察者会刷新状态到数据库,可拓展其他观察者
+            observerManager.wakeUpObserver(StageType.onFinish, taskBase, taskStageBase, clazz);
         } catch (InvocationTargetException | IllegalAccessException e) {
-            e.printStackTrace();
+            LOGGER.error("wake up on finish failed ", e);
         }
     }
 
-    public Class<?> getaClass(String taskType) throws ClassNotFoundException {
+    public Class<?> getclazz(String taskType) throws ClassNotFoundException {
         return Class.forName(packageName + "." + taskType);
     }
 
     private List<TaskBase> getTaskBaseList(ObserverManager observerManager, Class<?> taskType) {
-
-        List<TaskResp> taskList = null;
+        LOGGER.info(WorkerConstant.SVC_NAME + "start pull task, taskType={}", taskType.getSimpleName());
+        List<TaskResp> taskList;
         try {
+            //todo verify response
             taskList = taskManager.getTaskList(new TaskFilterDTO(
                     taskType.getSimpleName(),
                     TaskStatus.PENDING.getStatus(),
                     scheduleConfigMap.get(taskType.getSimpleName()).getScheduleLimit()
-            ));
-            if (taskList == null || taskList.size() == 0) {
+            )).getData();
+            if (Utils.isNull(taskList)) {
                 LOGGER.warn(ResponseStatus.WARN_NO_TASK.getMsg());
                 return null;
             }
-            //通知占据任务
-            try {
-                List<TaskBase> TaskBaseList = new ArrayList<>();
-                observerManager.wakeUpObserver(StageType.onObtain, taskList, TaskBaseList);
-                return TaskBaseList;
-            } catch (InvocationTargetException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("error getTaskBaseList,observerManager={},taskType={}",
+                    JSON.toJSONString(observerManager),
+                    JSON.toJSONString(taskType),
+                    e
+            );
+            return null;
+        }
+        //通知占据任务
+        try {
+            List<TaskBase> taskBaseList = new ArrayList<>();
+            observerManager.wakeUpObserver(StageType.onObtain, taskList, taskBaseList);
+            return taskBaseList;
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            LOGGER.error("error wake up obtain, taskList={},",
+                    JSON.toJSONString(taskList),
+                    e
+            );
         }
 
         return null;
     }
-
 
 
     @Override

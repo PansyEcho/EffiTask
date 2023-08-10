@@ -150,22 +150,24 @@
 
 
     <insert id="create"
-            useGeneratedKeys="true" keyProperty="asyncFlowTask.id">
+            useGeneratedKeys="true" keyProperty="task.id">
         INSERT INTO ${tableName} (`user_id`,
                                   `task_id`,
                                   `task_type`,
                                   `task_stage`,
                                   `status`,
-                                  `crt_retry_num`,
+                                  `current_retry_num`,
                                   `max_retry_num`,
                                   `order_time`,
                                   `priority`,
                                   `max_retry_interval`,
                                   `schedule_log`,
-                                  `task_context`)
+                                  `task_context`,
+                                  `create_time`,
+                                  `modify_time`)
         VALUES (#{task.userId},
                 #{task.taskId},
-                #{task.task_type},
+                #{task.taskType},
                 #{task.taskStage},
                 #{task.status},
                 #{task.currentRetryNum},
@@ -174,7 +176,9 @@
                 #{task.priority},
                 #{task.maxRetryInterval},
                 #{task.scheduleLog},
-                #{task.taskContext})
+                #{task.taskContext},
+                #{task.createTime},
+                #{task.modifyTime})
     </insert>
 
 

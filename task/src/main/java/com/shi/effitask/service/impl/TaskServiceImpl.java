@@ -60,7 +60,7 @@ public class TaskServiceImpl implements ITaskService {
         }
 
         TaskEntity taskEntity = new TaskEntity();
-        String taskId = getTaskId(createTaskReq.getTaskType(), taskPos.getScheduleEndPos(), tableName);
+        String taskId = getTaskId(createTaskReq.getTaskType(), taskPos.getScheduleEndPos());
         try {
             fillTaskEntity(createTaskReq, taskEntity, taskId, scheduleConfig);
             taskDao.create(tableName, taskEntity);
@@ -162,7 +162,7 @@ public class TaskServiceImpl implements ITaskService {
     }
 
     @Override
-    public <T> Result<T> setTask(UpdateTaskReq updateTaskReq) {
+    public <T> Result<T> updateTask(UpdateTaskReq updateTaskReq) {
         TaskEntity taskEntity;
         String tableName = getTableNameById(updateTaskReq.getTaskId());
         try {
@@ -236,12 +236,14 @@ public class TaskServiceImpl implements ITaskService {
     }
 
 
-    public void fillTaskEntity(CreateTaskReq createTaskReq, TaskEntity taskEntity, String taskId, ScheduleConfigEntity scheduleConfig) {
+    public void fillTaskEntity(CreateTaskReq createTaskReq,
+                               TaskEntity taskEntity,
+                               String taskId,
+                               ScheduleConfigEntity scheduleConfig) {
         taskEntity.setTaskId(taskId);
         long currentTime = System.currentTimeMillis();
         taskEntity.setOrderTime(currentTime);
         BeanUtils.copyProperties(createTaskReq, taskEntity);
-
 //        taskEntity.setUserId(createTaskReq.getUserId());
 //        taskEntity.setTaskType(createTaskReq.getTaskType());
 //        taskEntity.setTaskStage(createTaskReq.getTaskStage());
@@ -249,6 +251,8 @@ public class TaskServiceImpl implements ITaskService {
 //        taskEntity.setTaskContext(createTaskReq.getTaskContext());
         taskEntity.setMaxRetryInterval(scheduleConfig.getRetryInterval());
         taskEntity.setMaxRetryNum(scheduleConfig.getMaxRetryNum());
+        taskEntity.setCreateTime(currentTime);
+        taskEntity.setModifyTime(currentTime);
     }
 
 
@@ -290,8 +294,8 @@ public class TaskServiceImpl implements ITaskService {
     }
 
 
-    private String getTaskId(String taskType, int taskPos, String tableName) {
-        return Utils.getTaskId() + "_" + taskType + "_" + tableName + "_" + taskPos;
+    private String getTaskId(String taskType, int taskPos) {
+        return Utils.getTaskId() + "_" + taskType + "_" + tableName().toLowerCase() + "_" + taskPos;
     }
 
     private String getTableName(Integer pos, String taskType) {

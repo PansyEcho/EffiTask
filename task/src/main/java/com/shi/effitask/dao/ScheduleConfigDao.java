@@ -2,6 +2,7 @@ package com.shi.effitask.dao;
 
 import com.shi.effitask.pojo.entity.ScheduleConfigEntity;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -10,10 +11,10 @@ public interface ScheduleConfigDao {
 
     /**
      * 根据任务类型获取任务配置
-     * @param task_type
+     * @param taskType
      * @return
      */
-    ScheduleConfigEntity getConfigByType(String task_type);
+    ScheduleConfigEntity getConfigByType(String taskType);
 
     /**
      * 新增
@@ -25,6 +26,7 @@ public interface ScheduleConfigDao {
      * 获取所有任务配置列表
      * @return
      */
+
     List<ScheduleConfigEntity> getScheduleConfigList();
 
 }

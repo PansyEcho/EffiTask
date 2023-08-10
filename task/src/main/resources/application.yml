@@ -1,0 +1,23 @@
+server:
+    port: 10001
+
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://43.139.184.22:3306/effi_task?serverTimezone=GMT%2B8&characterEncoding=utf8&useSSL=false
+        username: root
+        password: shi
+#        maxIdle: 5000
+
+mybatis:
+    mapper-locations: classpath:mapper/*.xml
+#    type-aliases-package: com.shi.effitask.pojo.entity
+    #开启驼峰命名
+    configuration:
+        map-underscore-to-camel-case: true
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+
+
+
+

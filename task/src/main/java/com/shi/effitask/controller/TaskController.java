@@ -91,7 +91,7 @@ public class TaskController {
             LOGGER.error(ResponseStatus.ERR_INPUT_INVALID.getMsg());
             return Result.error(ResponseStatus.ERR_INPUT_INVALID);
         }
-        return taskService.setTask(updateTaskReq);
+        return taskService.updateTask(updateTaskReq);
     }
 
 
@@ -100,7 +100,7 @@ public class TaskController {
      * @return 获取指定用户的任务列表
      */
 
-    @GetMapping("/user/list")
+    @PostMapping("/user/list")
     public Result<List<TaskResp>> getUserTaskList(@RequestBody QueryUserTaskReq userTaskReq) {
         if (!userTaskReq.valid()) {
             LOGGER.error(ResponseStatus.ERR_INPUT_INVALID.getMsg());

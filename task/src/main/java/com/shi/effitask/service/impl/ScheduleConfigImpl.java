@@ -7,15 +7,19 @@ import com.shi.effitask.pojo.entity.ScheduleConfigEntity;
 import com.shi.effitask.service.IScheduleConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
 
+
+@Service
 public class ScheduleConfigImpl implements IScheduleConfigService {
 
     Logger LOGGER = LoggerFactory.getLogger(ScheduleConfigImpl.class);
 
-    @Resource
+    @Autowired
     private ScheduleConfigDao scheduleConfigDao;
 
 

@@ -11,16 +11,24 @@ public interface TaskExecutable<T> {
     TaskRet<T> handleFinish();
     TaskRet<T> handleError();
     TaskRet<T> contextLoad(String context);
+    TaskRet<T> logLoad(String log);
 
-    default TaskStageBase setStage(Class<?> clazz, String methodName,
-                                   Object[] params, Class<?>[] parameterTypes, Object... envs) {
+    default TaskStageBase setStage(Class<?> clazz,
+                                   String methodName,
+                                   Object[] params,
+                                   Class<?>[] parameterTypes,
+                                   Object... envs) {
+        //更新任务阶段
         return build(clazz, methodName, params, parameterTypes, envs);
     }
 
 
     // 利用类信息创建任务
-    default TaskStageBase build(Class<?> clazz, String methodName,
-                                Object[] params, Class<?>[] parameterTypes, Object... envs) {
+    default TaskStageBase build(Class<?> clazz,
+                                String methodName,
+                                Object[] params,
+                                Class<?>[] parameterTypes,
+                                Object... envs) {
         TaskBuilder.checkParamsNum(params, parameterTypes);
         Method method = TaskBuilder.getMethod(clazz, methodName, params, parameterTypes);
 

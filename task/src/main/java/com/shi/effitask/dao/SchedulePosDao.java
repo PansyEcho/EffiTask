@@ -20,11 +20,9 @@ public interface SchedulePosDao {
 
     /**
      * 获取任务位置信息
-     * @param task_type
+     * @param taskType
      * @return
      */
-    SchedulePosEntity getTaskPos(String task_type);
-
-
+    SchedulePosEntity getTaskPos(String taskType);
 
 }

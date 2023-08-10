@@ -15,8 +15,8 @@ public interface TaskStage {
     //执行任务前
     void onExecute(TaskBase asyncTaskReturn);
     //执行结束
-    void onFinish(TaskBase asyncTaskReturn, TaskStageBase taskStage, Class<?> aClass);
+    void onFinish(TaskBase asyncTaskReturn, TaskStageBase taskStage, Class<?> clazz);
     //执行失败
-    void onError(TaskBase asyncTaskReturn, ScheduleConfigEntity scheduleConfig, List<TaskBase> TaskBaseList, Class<?> aClass, Exception e);
+    void onError(TaskBase asyncTaskReturn, ScheduleConfigEntity scheduleConfig, List<TaskBase> TaskBaseList, Class<?> clazz, Exception e);
 
 }

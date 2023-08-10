@@ -13,9 +13,9 @@ public class TaskBuilder {
 
 
     public static CreateTaskReq build(TaskExecutable executable) throws NoSuchMethodException {
-        Class<? extends TaskExecutable> aClass = executable.getClass();
-        Method handProcess = aClass.getMethod("handleProcess");
-        return TaskBuilder.build(aClass, handProcess.getName(), new Object[0], new Class[0]);
+        Class<? extends TaskExecutable> clazz = executable.getClass();
+        Method handProcess = clazz.getMethod("handleProcess");
+        return TaskBuilder.build(clazz, handProcess.getName(), new Object[0], new Class[0]);
     }
 
     // 利用类信息创建任务

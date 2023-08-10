@@ -43,7 +43,7 @@
     </update>
 
 
-    <select id="getTaskPos" resultType="com.shi.effitask.pojo.entity.SchedulePosEntity">
+    <select id="getTaskPos" resultMap="BaseResultMap">
         select * from schedule_pos
         where
             task_type = #{taskType}

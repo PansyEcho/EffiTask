@@ -19,5 +19,9 @@ public class TaskConstant {
 
     //默认拉取间隔,单位秒
     public final static int DEFAULT_TIME_INTERVAL = 20;
+    //序列化上下文
+    public final static String TASK_METHOD_CONTEXT_LOAD = "contextLoad";
+    //序列化日志
+    public final static String TASK_METHOD_LOG_LOAD = "logLoad";
 
 }

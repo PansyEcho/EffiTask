@@ -15,7 +15,7 @@ public interface TaskDao {
      * @param task
      * @param tableName
      */
-    void create(@Param("tableName") String tableName, @Param("task") TaskEntity task);
+    int create(@Param("tableName") String tableName, @Param("task") TaskEntity task);
 
 
     /**
